@@ -15,7 +15,9 @@ eval (Sub x y)			= eval x - eval y
 eval (Mul x y)			= eval x * eval y
 eval (Div x y)			= eval x / eval y
 
-isNumChar c				=  isDigit c || c == '.' || c == 'e'
+isNumChar c				= isDigit c || c == '.' || c == 'e'
+
+skipSpaces str			= drop (length (takeWhile isSpace str)) str
 
 readNum :: String -> (Expr, String)
 readNum str				=
@@ -23,7 +25,7 @@ readNum str				=
 		then (Const val, drop (length valstr) str)
 		else error ("Expected number got " ++ show (take 10 str))
 	where
-		valstr			= takeWhile isNumChar str
+		valstr			= takeWhile isNumChar (skipSpaces str)
 		val				= read valstr
 
 readOp :: Char -> Expr -> Expr -> Expr
@@ -41,17 +43,18 @@ precendence '/'			= 2
 precendence x			= error ("Unknown operator " ++ show x)
 
 parseBinary :: Expr -> String -> Int -> (Expr, String)
-parseBinary left str1 prec =
+parseBinary left str prec =
 	if hasOp
 		then if opPrec > prec
 			then ((readOp op left result), str3)
 			else (left, str1)
 		else (left, "")
  	where
+		str1			= skipSpaces str
 		hasOp			= length str1 > 0
 		op				= head str1
 		opPrec			= precendence op
-		(right, str2)	= readNum (tail str1)
+		(right, str2)	= readNum (skipSpaces $ tail str1)
 		(result, str3)	= parseBinary right str2 opPrec
 
 parseR :: (Expr, String) -> (Expr, String)
