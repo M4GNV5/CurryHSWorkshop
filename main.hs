@@ -78,27 +78,3 @@ cutOff :: Int -> Tree a -> Tree a
 cutOff 0 _				= Nil
 cutOff _ Nil			= Nil
 cutOff len (Fork x a b)	= Fork x (cutOff (len - 1) a) (cutOff (len - 1) b)
-
-data Expr =	Const Float
-			| Add Expr Expr
-			| Sub Expr Expr
-			| Mul Expr Expr
-			| Div Expr Expr
-			| Mod Expr Expr
-
-eval :: Expr -> Float
-eval (Const x)			= x
-eval (Add x y)			= eval x + eval y
-eval (Sub x y)			= eval x - eval y
-eval (Mul x y)			= eval x * eval y
-eval (Div x y)			= eval x / eval y
-
-{-parseNum :: String -> (Integer, String)
-parseNum str			= (length valstr, val)
-	where
-		valstr			= takeWhile (\c -> or [isDigit c, c == '.', c == 'e'])
-		val				= read valstr
-
-parse :: String -> Expr
-parse str prec
-	| isDigit c			= Expr val-}
