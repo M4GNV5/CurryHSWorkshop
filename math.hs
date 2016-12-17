@@ -6,7 +6,6 @@ data Expr =	Const Double
 			| Sub Expr Expr
 			| Mul Expr Expr
 			| Div Expr Expr
-			| Mod Expr Expr
 	deriving Show
 
 eval :: Expr -> Double
@@ -18,10 +17,10 @@ eval (Div x y)			= eval x / eval y
 
 isNumChar c				=  isDigit c || c == '.' || c == 'e'
 
-readNum :: String -> (Double, String)
+readNum :: String -> (Expr, String)
 readNum str				=
 	if length valstr > 0
-		then (val, drop (length valstr) str)
+		then (Const val, drop (length valstr) str)
 		else error ("Expected number got " ++ show (take 10 str))
 	where
 		valstr			= takeWhile isNumChar str
@@ -34,25 +33,34 @@ readOp '*' x y			= Mul x y
 readOp '/' x y			= Div x y
 readOp x _ _			= error ("Unknown operator " ++ show x)
 
-parseBinary :: String -> (Expr, String)
-parseBinary str1		=
+precendence :: Char -> Int
+precendence '+'			= 1
+precendence '-'			= 1
+precendence '*'			= 2
+precendence '/'			= 2
+precendence x			= error ("Unknown operator " ++ show x)
+
+parseBinary :: Expr -> String -> Int -> (Expr, String)
+parseBinary left str1 prec =
 	if hasOp
-		then ((readOp op left right), str3)
+		then if opPrec > prec
+			then ((readOp op left result), str3)
+			else (left, str1)
 		else (left, "")
  	where
-		(num, str2)		= readNum str1
-		left			= Const num
-		hasOp			= length str2 > 0
-		op				= head str2
-		(right, str3)	= parseBinary (tail str2)
+		hasOp			= length str1 > 0
+		op				= head str1
+		opPrec			= precendence op
+		(right, str2)	= readNum (tail str1)
+		(result, str3)	= parseBinary right str2 opPrec
+
+parseR :: (Expr, String) -> (Expr, String)
+parseR x			=
+	if length str > 0
+		then parseR $ parseBinary val str 0
+		else (val, str)
+	where
+		(val, str)		= parseBinary (fst x) (snd x) 0
 
 parse :: String -> Expr
-parse str				= fst $ parseBinary str
-
-{-
-TODO
-precendece '+'			= 1
-precendece '+'			= 1
-precendece '*'			= 2
-precendece '/'			= 2
--}
+parse str				= fst $ parseR $ readNum str
